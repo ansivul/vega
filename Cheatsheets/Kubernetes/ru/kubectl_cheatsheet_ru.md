@@ -1,25 +1,3 @@
----
-title: Шпаргалка по kubectl
-reviewers:
-- erictune
-- krousey
-- clove
-content_type: concept
-card:
-  name: reference
-  weight: 30
----
-
-<!-- overview -->
-
-Смотрите также: [обзор Kubectl](/ru/docs/reference/kubectl/overview/) и [руководство по JsonPath](/ru/docs/reference/kubectl/jsonpath).
-
-Эта команда представляет собой обзор команды `kubectl`.
-
-
-
-<!-- body -->
-
 # kubectl - Шпаргалка
 
 ## Автодополнение ввода для Kubectl

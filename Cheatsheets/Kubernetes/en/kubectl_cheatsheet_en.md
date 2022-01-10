@@ -1,21 +1,3 @@
----
-title: kubectl Cheat Sheet
-reviewers:
-- erictune
-- krousey
-- clove
-content_type: concept
-card:
-  name: reference
-  weight: 30
----
-
-<!-- overview -->
-
-This page contains a list of commonly used `kubectl` commands and flags.
-
-<!-- body -->
-
 ## Kubectl autocomplete
 
 ### BASH

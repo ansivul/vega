@@ -802,23 +802,3 @@ vim httpd.conf
 # запускать контейнер с измененной конфигурацией
 docker run --rm -ti -v "$PWD/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro" -p "80:80" httpd
 ```
-
-## Содействие
-
-Вот как внести свой вклад в этот чит-лист.
-
-### Открыть README.md
-
-Click [README.md](https://github.com/wsargent/docker-cheat-sheet/blob/master/README.md) <-- this link
-
-![Click This](../images/click.png)
-
-### Отредактировать страницу
-
-![Edit This](../images/edit.png)
-
-### Внести изменения и зафиксировать
-
-![Change This](../images/change.png)
-
-![Commit](../images/commit.png)

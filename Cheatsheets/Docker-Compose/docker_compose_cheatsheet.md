@@ -1,11 +1,3 @@
----
-title: Docker Compose Cheatsheet
-subtitle: Quick reference for Docker Compose commands and config files
-author: Jon LaBelle
-date: April 7, 2019
-source: https://jonlabelle.com/snippets/view/markdown/docker-compose-cheatsheet
----
-
 ## Basic config example
 
 ```yml

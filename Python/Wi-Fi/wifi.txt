@@ -1,0 +1,30 @@
+Profile: Xiaomi_55CA_AA35
+Password: None
+####################
+Profile: Avrora_5G
+Password: Vasilisa!20
+####################
+Profile: SC1
+Password: Experienc3!
+####################
+Profile: Redmi Note 9 Pro
+Password: dqkf0965
+####################
+Profile: SC-SC
+Password: na2fe4gyE5ChRCHy5SH@3
+####################
+Profile: Avrora
+Password: Vasilisa!20
+####################
+Profile: AndroidAP0F24
+Password: dqkf0965
+####################
+Profile: dlink
+Password: None
+####################
+Profile: Abyss
+Password: None
+####################
+Profile: Pleiads
+Password: 03806713832110
+####################

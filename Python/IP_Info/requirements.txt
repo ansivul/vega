@@ -1,2 +1,12 @@
-pyfiglet
-folium
+branca==0.4.2
+certifi==2021.10.8
+charset-normalizer==2.0.12
+folium==0.12.1.post1
+idna==3.3
+Jinja2==3.0.3
+MarkupSafe==2.1.0
+numpy==1.22.3
+pyfiglet==0.8.post1
+requests==2.27.1
+urllib3==1.26.8
+yapf==0.32.0

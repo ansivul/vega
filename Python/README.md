@@ -22,3 +22,7 @@ deactivate
 ```sh
 Форматирование кода yapf ALT + SHIFT + F
 ```
+
+```sh 
+python3 -m venv env && . venv/Scripts/activate && pip install -r requirements.txt
+```

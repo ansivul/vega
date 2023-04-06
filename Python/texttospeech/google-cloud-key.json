@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "primeval-argon-378520",
+  "private_key_id": "4da15c42f64a71107ddbd37730949a567c3e15a0",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDKg4IK/VMwNPKv\nnuHBkY0eUXswiycVMrdzIKny+rtUhzeptL+MMJZ9esE1ScvnBYYCf0oxtH2Lo1SY\ng4mRK42MBsoV/mp4+xnYyJK1qslroRnDhlhwFasYG5mof7O58RRag/TYAL+Q90rP\nfpbhjwUcwJm0JPeCtbdezm0Fa6bBNI1WQ5R8rQoHLKPmwRgn39NJzvMiqG97x0W5\naRrzorrgFWZxMVJ4AFBtmKOwC2aT3b0kD4R+qtENCqOGnFi9xKkIcLs6otln11wc\ntEzOl3nhCBuDa/Hfc891iMENS+emvJqiApePZHR98wrpg/HQodzywS/M4wX1Jt1Z\nVWVonrnXAgMBAAECggEAA2kx9wfA73EXh1VjPbSQY8Ar6tY6gHURZEXavEYfLUjL\nwLbTz8N/vWRPExvc7IAKJkpI5cvBnj5QLfNv4pCRD+3grdHSWZr3xVAiMcogc14h\ncMrMpt1OkOziFSr1dtPJ1nkeK3Hecs100UgzYrWFzgVWcWjP/GpyyLeBsZODGazx\nDzpVbswEdn2s5b7uyavQvWqPQzMJd9TfLa6ESmnMwK0zWdqWk79sPNNbnPRLLtAo\nsA21FUrYFXvRIFbjmyENlA+uhAFmBy4KPciDMhMqM2CFgbaRCy0RzMD2sHsWAvQ0\nKs63C79tEz9Vp3I7dsIbpmo46f56+QirVFcLmxVeBQKBgQD2y7bolKnOU19eMRvy\nymfpJt30aA89XSKgjFw/YiXTTVYCOGCwiN8APN/O1+GVeSyeVDkISGnN6at+i487\nlkDhgYE3KTVIpemVUTfqUjc6/BWweuJGlXQ7HMKiPjfZ6Ayi7SWGuwv7CKX1dvkT\nkJR56fd37fV8p3zSACg/q8Zd5QKBgQDSEQKQqgZD5RdbkR5awnvguowHtrPJ+tlJ\n3WEgxhLq8QiYHtqo5B0uRcQOGDu4V2n/kckAj3t8C+6jYQPFwVsvITep3brdMgHb\nFxI/fAWUJ00z5e0aUm/pRSeAOlDRea4fcHmHdvdNggn3T2T4YcejnlP7Tx+3QjqF\n4HPvF0LdCwKBgHmXmrFydUr7VrRQm8V+Jb4AcUB2eHOyTFovbU+pKpu1sZd8cV7o\nwH4cf+QoBrOfNPV453SGQOK7qsu5NMOV3rd8F862ldMKM1Bm6JahFScRhhoiIRPH\nlLF/FQHch6XrpzYqgt+jjl6LP0D18ffKtuxt8of7DITy/BN3El10Y1JlAoGBAMqN\nnlSRrZLgHsKrToKjT0GlfwqdEAVtPQHtVg99Dpa+LdRIw/zgYIbSvLX+he89Urcd\nApzovWAiPUwKatHPnLX4KK1BYUKSSpnQSEcwtkxiDR5C0Xp1DPX4OZt6H52s38nu\n8TA+9T0ma6etRaX+2rqZG0+Svvk9AiM/B2r+mfl7AoGBAJ3Ac9JwVHEh9B74DMcB\nWImcfkZADdUUrpCmO9Bg+3C0VXDz2GAaZByfAv3R3ya5bG0+z90xmiO1fw6mpFzS\nhKtB7q6x/P1EOrs2SzMyLl8c82Ur8qZw/6etwfFDBeYDfLI6hoTRhQKwP2ghfu16\n6BqoqMOUsRr8b9B934QEdg0l\n-----END PRIVATE KEY-----\n",
+  "client_email": "ansi-269@primeval-argon-378520.iam.gserviceaccount.com",
+  "client_id": "109312829135527337948",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/ansi-269%40primeval-argon-378520.iam.gserviceaccount.com"
+}

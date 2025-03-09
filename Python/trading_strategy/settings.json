@@ -1,0 +1,22 @@
+{
+    "symbol": "XRPUSDT",                    
+    "timeframe": "4h",
+    "fgi_threshold_low": 25,
+    "fgi_threshold_high": 75,
+    "rsi_threshold_low": 30,
+    "rsi_threshold_high": 70,
+    "rsi_period": 14,
+    "ema_short_period": 12,
+    "ema_long_period": 26,
+    "macd_fast": 12,
+    "macd_slow": 26,
+    "macd_signal": 9,
+    "bollinger_period": 20,
+    "bollinger_deviation": 2,
+    "support_resistance_window": 10,
+    "show_explanations": true,
+    "historical_data_limit": 100,
+    "success_threshold": 0.02,
+    "success_horizon": 5,
+    "adx_period": 14
+}   

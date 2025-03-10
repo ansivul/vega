@@ -12,7 +12,7 @@ try:
 except FileNotFoundError:
     print("Файл settings.json не найден, используются параметры по умолчанию")
     settings = {
-        "symbol": "BTCUSDT",                    # Символ торговой пары (например, BTCUSDT для Bitcoin к USDT) ETHUSDT XRP/USDT BNB/USDT
+        "symbol": "BTCUSDT",                    # Символ торговой пары (например, BTCUSDT для Bitcoin к USDT) ETHUSDT XRPUSDT BNBUSDT
         "timeframe": "4h",                      # Таймфрейм для анализа (например, 4h - 4 часа)
         "fgi_threshold_low": 25,                # Нижний порог FGI (Fear and Greed Index) для определения страха (0-25)
         "fgi_threshold_high": 75,               # Верхний порог FGI для определения жадности (75-100)
@@ -55,10 +55,7 @@ SUCCESS_THRESHOLD = settings.get("success_threshold", 0.02)
 SUCCESS_HORIZON = settings.get("success_horizon", 5)
 ADX_PERIOD = settings.get("adx_period", 14)
 
-# Подключение к Bybit
-exchange = ccxt.bybit({
-    'enableRateLimit': True,
-})
+exchange = ccxt.bybit({'enableRateLimit': True})
 
 # Функция для получения FGI
 def get_fgi():
@@ -134,7 +131,6 @@ def analyze_historical_signals(df, fgi_values):
     if df is None or len(df) < HISTORICAL_DATA_LIMIT:
         print("Недостаточно данных для исторического анализа")
         return {}
-
     # Рассчитываем индикаторы для исторических данных
     rsi = calculate_rsi(df, RSI_PERIOD)
     ema_short, ema_long = calculate_ema(df, EMA_SHORT_PERIOD, EMA_LONG_PERIOD)
@@ -144,12 +140,10 @@ def analyze_historical_signals(df, fgi_values):
 
     historical_signals = []
     for i in range(len(df) - SUCCESS_HORIZON):
-        # Пропускаем, если данных недостаточно
         if pd.isna(rsi.iloc[i]) or pd.isna(ema_short.iloc[i]) or pd.isna(macd.iloc[i]) or pd.isna(bb_upper.iloc[i]) or pd.isna(adx.iloc[i]):
             continue
 
-        # Получаем значения индикаторов на момент i
-        fgi = fgi_values[i] if i < len(fgi_values) else 50  # Если FGI нет, используем нейтральное значение
+        fgi = fgi_values[i] if i < len(fgi_values) else 50
         current_rsi = rsi.iloc[i]
         current_price = df['close'].iloc[i]
         current_volume = df['volume'].iloc[i]
@@ -162,7 +156,6 @@ def analyze_historical_signals(df, fgi_values):
         current_bb_lower = bb_lower.iloc[i]
         current_adx = adx.iloc[i]
 
-        # Определяем сценарий
         scenario = None
         if fgi <= FGI_THRESHOLD_LOW and current_rsi <= RSI_THRESHOLD_LOW:
             scenario = "long"
@@ -175,11 +168,9 @@ def analyze_historical_signals(df, fgi_values):
         else:
             scenario = "neutral"
 
-        # Определяем тренд
         trend = "bullish" if current_ema_short > current_ema_long else "bearish"
         trend_strength = "strong" if current_adx > 25 else "weak"
 
-        # Проверяем успешность сигнала
         future_price = df['close'].iloc[i + SUCCESS_HORIZON]
         price_change = (future_price - current_price) / current_price
         success = None
@@ -188,9 +179,8 @@ def analyze_historical_signals(df, fgi_values):
         elif scenario in ["short", "divergence_short"]:
             success = price_change <= -SUCCESS_THRESHOLD
         else:
-            continue  # Пропускаем нейтральные сигналы
+            continue
 
-        # Сохраняем сигнал
         signal = {
             "scenario": scenario,
             "trend": trend,
@@ -209,63 +199,60 @@ def analyze_historical_signals(df, fgi_values):
         if signal["success"]:
             success_rates[key]["success"] += 1
 
+   # print("Историческая статистика:", success_rates)
     return success_rates
 
 # Функция для расчета вероятности на основе исторических данных
 def calculate_probability(scenario, trend, trend_strength, success_rates, volume_confirmed, ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed):
-    # Базовая вероятность на основе исторических данных
     key = (scenario, trend, trend_strength)
-    base_probability = 50  # Если нет исторических данных
+    base_probability = 50 # Базовая вероятность на основе исторических данных
     if key in success_rates and success_rates[key]["total"] > 0:
         base_probability = (success_rates[key]["success"] / success_rates[key]["total"]) * 100
-
+        
     # Корректировка на основе текущих подтверждений индикаторов
     confirmed_count = sum([1 for c in [volume_confirmed, ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed] if c])
     total_indicators = 5
-    confirmation_bonus = (confirmed_count / total_indicators) * 30  # Максимум +30% за подтверждения
+    confirmation_bonus = (confirmed_count / total_indicators) * 30
     probability = base_probability + confirmation_bonus
 
-    # Ограничиваем вероятность
-    return min(max(probability, 20), 90)
+    #print(f"Базовая вероятность: {base_probability:.2f}%")
+    #print(f"Бонус за подтверждения: {confirmation_bonus:.2f}%")
+    #print(f"Итоговая вероятность: {probability:.2f}%")
 
-# Функция для вывода пояснений
+    return probability
+
 def print_explanations(ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed, scenario):
     print("\n--- Пояснения ---")
     if scenario == "long" or scenario == "short":
         print(f"Сценарий: {'Согласованный сигнал (Long)' if scenario == 'long' else 'Согласованный сигнал (Short)'}")
         print("- FGI и RSI указывают в одном направлении (FGI низкий и RSI низкий для long, или FGI высокий и RSI высокий для short).")
-        print("- В этом случае EMA, MACD, Bollinger Bands и уровни поддержки/сопротивления не проверяются, так как сигнал уже сильный.")
     elif scenario == "divergence_long" or scenario == "divergence_short":
         print(f"Сценарий: Перекос сигналов ({'Long' if scenario == 'divergence_long' else 'Short'})")
         print("- Перекос: FGI и RSI противоречат друг другу (например, FGI высокий (жадность), но RSI низкий (перепроданность)).")
-        print("- Проверяются дополнительные индикаторы для подтверждения:")
-        print("  * Объем: Подтверждается, если текущий объем больше предыдущего на 20% (volume > prev_volume * 1.2).")
-        print("  * EMA (Экспоненциальная скользящая средняя):")
-        print("    - Бычий тренд: Короткая EMA (EMA Short) выше длинной EMA (EMA Long) — указывает на восходящий тренд.")
-        print("    - Медвежий тренд: Короткая EMA ниже длинной EMA — указывает на нисходящий тренд.")
-        print(f"    - {'Подтверждено' if ema_confirmed else 'Не подтверждено'}: {'EMA поддерживает сигнал' if ema_confirmed else 'EMA не поддерживает сигнал (тренд противоположный)'}.")
-        print("  * MACD (Схождение/расхождение скользящих средних):")
-        print("    - Бычий сигнал: MACD Line выше Signal Line — указывает на восходящий импульс.")
-        print("    - Медвежий сигнал: MACD Line ниже Signal Line — указывает на нисходящий импульс.")
-        print(f"    - {'Подтверждено' if macd_confirmed else 'Не подтверждено'}: {'MACD поддерживает сигнал' if macd_confirmed else 'MACD не поддерживает сигнал (импульс противоположный)'}.")
-        print("  * Bollinger Bands (Полосы Боллинджера):")
-        print("    - Цена у нижней полосы или ниже: Указывает на перепроданность (поддерживает long).")
-        print("    - Цена у верхней полосы или выше: Указывает на перекупленность (поддерживает short).")
-        print(f"    - {'Подтверждено' if bollinger_confirmed else 'Не подтверждено'}: {'Bollinger Bands поддерживают сигнал' if bollinger_confirmed else 'Bollinger Bands не поддерживают сигнал (цена не в экстремальной зоне)'}.")
-        print("  * Уровни поддержки/сопротивления:")
-        print("    - Цена у поддержки: Указывает на вероятный разворот вверх (поддерживает long).")
-        print("    - Цена у сопротивления: Указывает на вероятный разворот вниз (поддерживает short).")
-        print(f"    - {'Подтверждено' if sr_confirmed else 'Не подтверждено'}: {'Уровни поддержки/сопротивления поддерживают сигнал' if sr_confirmed else 'Уровни поддержки/сопротивления не поддерживают сигнал (цена не у ключевого уровня)'}.")
     else:
         print("Сценарий: Нейтральная зона")
         print("- FGI и RSI находятся в нейтральных значениях (не экстремальные).")
-        print("- Дополнительные индикаторы могут дать сигнал:")
-        print("  * Bollinger Bands: Цена у нижней полосы (возможный long) или у верхней полосы (возможный short).")
-        print("  * Уровни поддержки/сопротивления: Цена у поддержки (возможный long) или у сопротивления (возможный short).")
 
-# Основная логика стратегии
+    print("- Проверяются дополнительные индикаторы для подтверждения:")
+    print("  * Объем: Подтверждается, если текущий объем больше предыдущего на 20% (volume > prev_volume * 1.2).")
+    print("  * EMA (Экспоненциальная скользящая средняя):")
+    print("    - Бычий тренд: Короткая EMA (EMA Short) выше длинной EMA (EMA Long) — указывает на восходящий тренд.")
+    print("    - Медвежий тренд: Короткая EMA ниже длинной EMA — указывает на нисходящий тренд.")
+    print(f"    - {'Подтверждено' if ema_confirmed else 'Не подтверждено'}: {'EMA поддерживает сигнал' if ema_confirmed else 'EMA не поддерживает сигнал (тренд противоположный)'}.")
+    print("  * MACD (Схождение/расхождение скользящих средних):")
+    print("    - Бычий сигнал: MACD Line выше Signal Line — указывает на восходящий импульс.")
+    print("    - Медвежий сигнал: MACD Line ниже Signal Line — указывает на нисходящий импульс.")
+    print(f"    - {'Подтверждено' if macd_confirmed else 'Не подтверждено'}: {'MACD поддерживает сигнал' if macd_confirmed else 'MACD не поддерживает сигнал (импульс противоположный)'}.")
+    print("  * Bollinger Bands (Полосы Боллинджера):")
+    print("    - Цена у нижней полосы или ниже: Указывает на перепроданность (поддерживает long).")
+    print("    - Цена у верхней полосы или выше: Указывает на перекупленность (поддерживает short).")
+    print(f"    - {'Подтверждено' if bollinger_confirmed else 'Не подтверждено'}: {'Bollinger Bands поддерживают сигнал' if bollinger_confirmed else 'Bollinger Bands не поддерживают сигнал (цена не в экстремальной зоне)'}.")
+    print("  * Уровни поддержки/сопротивления:")
+    print("    - Цена у поддержки: Указывает на вероятный разворот вверх (поддерживает long).")
+    print("    - Цена у сопротивления: Указывает на вероятный разворот вниз (поддерживает short).")
+    print(f"    - {'Подтверждено' if sr_confirmed else 'Не подтверждено'}: {'Уровни поддержки/сопротивления поддерживают сигнал' if sr_confirmed else 'Уровни поддержки/сопротивления не поддерживают сигнал (цена не у ключевого уровня)'}.")
+
 def trading_strategy(symbol, timeframe):
-    # Загружаем исторические данные для анализа
     historical_df = fetch_ohlcv(symbol, timeframe, limit=HISTORICAL_DATA_LIMIT)
     fgi = get_fgi()
     df = fetch_ohlcv(symbol, timeframe, limit=max(EMA_LONG_PERIOD + MACD_SIGNAL, BOLLINGER_PERIOD, SUPPORT_RESISTANCE_WINDOW * 2) + 1)
@@ -287,14 +274,12 @@ def trading_strategy(symbol, timeframe):
 
     prev_volume = df['volume'].iloc[-2] if len(df) >= 2 else 0
 
-    # Анализ исторических сигналов
-    # Для упрощения используем текущий FGI для всех исторических данных
-    fgi_values = [fgi] * len(historical_df)  # В реальном приложении нужно собирать исторические FGI
+    fgi_values = [fgi] * len(historical_df)
     success_rates = analyze_historical_signals(historical_df, fgi_values)
 
-    # Определяем сценарий и тренд
     scenario = None
     recommendation = None
+    volume_confirmed = False
     ema_confirmed = False
     macd_confirmed = False
     bollinger_confirmed = False
@@ -302,12 +287,43 @@ def trading_strategy(symbol, timeframe):
     trend = "bullish" if ema_short > ema_long else "bearish"
     trend_strength = "strong" if adx > 25 else "weak"
 
+    # Проверяем индикаторы для всех сценариев
     if fgi <= FGI_THRESHOLD_LOW and rsi <= RSI_THRESHOLD_LOW:
         scenario = "long"
-        recommendation = f"Открыть long: FGI = {fgi} (страх), RSI = {rsi:.2f} (перепроданность)"
+        volume_confirmed = volume > prev_volume * 1.2
+        ema_confirmed = ema_short > ema_long
+        macd_confirmed = macd > macd_signal
+        bollinger_confirmed = price <= bb_lower
+        sr_confirmed = abs(price - support) / price < 0.02
+        confirmation_status = (f"Объем: {'подтверждено' if volume_confirmed else 'не подтверждено'}, "
+                              f"EMA: {'подтверждено' if ema_confirmed else 'не подтверждено'}, "
+                              f"MACD: {'подтверждено' if macd_confirmed else 'не подтверждено'}, "
+                              f"Bollinger Bands: {'подтверждено' if bollinger_confirmed else 'не подтверждено'}, "
+                              f"Уровни поддержки/сопротивления: {'подтверждено' if sr_confirmed else 'не подтверждено'}")
+        confirmed_count = sum([volume_confirmed, ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed])
+        if confirmed_count >= 3:
+            recommendation = f"FGI = {fgi} (рынок в страхе), RSI = {rsi:.2f} (перепроданность). Рекомендую покупку ({confirmation_status})"
+        else:
+            recommendation = f"FGI = {fgi} (рынок в страхе), RSI = {rsi:.2f} (перепроданность). Сигнал на покупку слабый, ждем подтверждения ({confirmation_status})"
+
     elif fgi >= FGI_THRESHOLD_HIGH and rsi >= RSI_THRESHOLD_HIGH:
         scenario = "short"
-        recommendation = f"Открыть short: FGI = {fgi} (жадность), RSI = {rsi:.2f} (перекупленность)"
+        volume_confirmed = volume > prev_volume * 1.2
+        ema_confirmed = ema_short < ema_long
+        macd_confirmed = macd < macd_signal
+        bollinger_confirmed = price >= bb_upper
+        sr_confirmed = abs(price - resistance) / price < 0.02
+        confirmation_status = (f"Объем: {'подтверждено' if volume_confirmed else 'не подтверждено'}, "
+                              f"EMA: {'подтверждено' if ema_confirmed else 'не подтверждено'}, "
+                              f"MACD: {'подтверждено' if macd_confirmed else 'не подтверждено'}, "
+                              f"Bollinger Bands: {'подтверждено' if bollinger_confirmed else 'не подтверждено'}, "
+                              f"Уровни поддержки/сопротивления: {'подтверждено' if sr_confirmed else 'не подтверждено'}")
+        confirmed_count = sum([volume_confirmed, ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed])
+        if confirmed_count >= 3:
+            recommendation = f"FGI = {fgi} (рынок в жадности), RSI = {rsi:.2f} (перекупленность). Рекомендую продажу ({confirmation_status})"
+        else:
+            recommendation = f"FGI = {fgi} (рынок в жадности), RSI = {rsi:.2f} (перекупленность). Сигнал на продажу слабый, ждем подтверждения ({confirmation_status})"
+
     elif fgi >= FGI_THRESHOLD_HIGH and rsi <= RSI_THRESHOLD_LOW:
         scenario = "divergence_long"
         volume_confirmed = volume > prev_volume * 1.2
@@ -315,15 +331,17 @@ def trading_strategy(symbol, timeframe):
         macd_confirmed = macd > macd_signal
         bollinger_confirmed = price <= bb_lower
         sr_confirmed = abs(price - support) / price < 0.02
-        if volume_confirmed and ema_confirmed and macd_confirmed and bollinger_confirmed and sr_confirmed:
-            recommendation = f"Перекос: FGI = {fgi} (жадность), RSI = {rsi:.2f} (перепроданность). Открыть long (объем, EMA, MACD, Bollinger Bands, уровни поддержки/сопротивления подтверждают)"
+        confirmation_status = (f"Объем: {'подтверждено' if volume_confirmed else 'не подтверждено'}, "
+                              f"EMA: {'подтверждено' if ema_confirmed else 'не подтверждено'}, "
+                              f"MACD: {'подтверждено' if macd_confirmed else 'не подтверждено'}, "
+                              f"Bollinger Bands: {'подтверждено' if bollinger_confirmed else 'не подтверждено'}, "
+                              f"Уровни поддержки/сопротивления: {'подтверждено' if sr_confirmed else 'не подтверждено'}")
+        confirmed_count = sum([volume_confirmed, ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed])
+        if confirmed_count >= 3:
+            recommendation = f"Перекос: FGI = {fgi} (жадность), RSI = {rsi:.2f} (перепроданность). Рекомендую покупку ({confirmation_status})"
         else:
-            confirmation_status = (f"Объем: {'подтверждено' if volume_confirmed else 'не подтверждено'}, "
-                                  f"EMA: {'подтверждено' if ema_confirmed else 'не подтверждено'}, "
-                                  f"MACD: {'подтверждено' if macd_confirmed else 'не подтверждено'}, "
-                                  f"Bollinger Bands: {'подтверждено' if bollinger_confirmed else 'не подтверждено'}, "
-                                  f"Уровни поддержки/сопротивления: {'подтверждено' if sr_confirmed else 'не подтверждено'}")
-            recommendation = f"Перекос: FGI = {fgi} (жадность), RSI = {rsi:.2f} (перепроданность). Ждем подтверждения ({confirmation_status})"
+            recommendation = f"Перекос: FGI = {fgi} (жадность), RSI = {rsi:.2f} (перепроданность). Сигнал на покупку слабый, ждем подтверждения ({confirmation_status})"
+
     elif fgi <= FGI_THRESHOLD_LOW and rsi >= RSI_THRESHOLD_HIGH:
         scenario = "divergence_short"
         volume_confirmed = volume > prev_volume * 1.2
@@ -331,25 +349,53 @@ def trading_strategy(symbol, timeframe):
         macd_confirmed = macd < macd_signal
         bollinger_confirmed = price >= bb_upper
         sr_confirmed = abs(price - resistance) / price < 0.02
-        if volume_confirmed and ema_confirmed and macd_confirmed and bollinger_confirmed and sr_confirmed:
-            recommendation = f"Перекос: FGI = {fgi} (страх), RSI = {rsi:.2f} (перекупленность). Открыть short (объем, EMA, MACD, Bollinger Bands, уровни поддержки/сопротивления подтверждают)"
+        confirmation_status = (f"Объем: {'подтверждено' if volume_confirmed else 'не подтверждено'}, "
+                              f"EMA: {'подтверждено' if ema_confirmed else 'не подтверждено'}, "
+                              f"MACD: {'подтверждено' if macd_confirmed else 'не подтверждено'}, "
+                              f"Bollinger Bands: {'подтверждено' if bollinger_confirmed else 'не подтверждено'}, "
+                              f"Уровни поддержки/сопротивления: {'подтверждено' if sr_confirmed else 'не подтверждено'}")
+        confirmed_count = sum([volume_confirmed, ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed])
+        if confirmed_count >= 3:
+            recommendation = f"Перекос: FGI = {fgi} (страх), RSI = {rsi:.2f} (перекупленность). Рекомендую продажу ({confirmation_status})"
         else:
+            recommendation = f"Перекос: FGI = {fgi} (страх), RSI = {rsi:.2f} (перекупленность). Сигнал на продажу слабый, ждем подтверждения ({confirmation_status})"
+
+    else:
+        scenario = "neutral"
+        volume_confirmed = volume > prev_volume * 1.2
+        ema_confirmed = ema_short > ema_long
+        macd_confirmed = macd > macd_signal
+        bollinger_confirmed = price <= bb_lower
+        sr_confirmed = abs(price - support) / price < 0.02
+        confirmed_count_long = sum([volume_confirmed, ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed])
+
+        ema_confirmed_short = ema_short < ema_long
+        macd_confirmed_short = macd < macd_signal
+        bollinger_confirmed_short = price >= bb_upper
+        sr_confirmed_short = abs(price - resistance) / price < 0.02
+        confirmed_count_short = sum([volume_confirmed, ema_confirmed_short, macd_confirmed_short, bollinger_confirmed_short, sr_confirmed_short])
+
+        if confirmed_count_long >= 3:
             confirmation_status = (f"Объем: {'подтверждено' if volume_confirmed else 'не подтверждено'}, "
                                   f"EMA: {'подтверждено' if ema_confirmed else 'не подтверждено'}, "
                                   f"MACD: {'подтверждено' if macd_confirmed else 'не подтверждено'}, "
                                   f"Bollinger Bands: {'подтверждено' if bollinger_confirmed else 'не подтверждено'}, "
                                   f"Уровни поддержки/сопротивления: {'подтверждено' if sr_confirmed else 'не подтверждено'}")
-            recommendation = f"Перекос: FGI = {fgi} (страх), RSI = {rsi:.2f} (перекупленность). Ждем подтверждения ({confirmation_status})"
-    else:
-        scenario = "neutral"
-        if price <= bb_lower or abs(price - support) / price < 0.02:
-            recommendation = f"Нейтральная зона: FGI = {fgi}, RSI = {rsi:.2f}. Возможный long (цена у нижней полосы Bollinger или у поддержки)"
-        elif price >= bb_upper or abs(price - resistance) / price < 0.02:
-            recommendation = f"Нейтральная зона: FGI = {fgi}, RSI = {rsi:.2f}. Возможный short (цена у верхней полосы Bollinger или у сопротивления)"
+            recommendation = f"Нейтральная зона: FGI = {fgi}, RSI = {rsi:.2f}. Возможна покупка ({confirmation_status})"
+        elif confirmed_count_short >= 3:
+            confirmation_status = (f"Объем: {'подтверждено' if volume_confirmed else 'не подтверждено'}, "
+                                  f"EMA: {'подтверждено' if ema_confirmed_short else 'не подтверждено'}, "
+                                  f"MACD: {'подтверждено' if macd_confirmed_short else 'не подтверждено'}, "
+                                  f"Bollinger Bands: {'подтверждено' if bollinger_confirmed_short else 'не подтверждено'}, "
+                                  f"Уровни поддержки/сопротивления: {'подтверждено' if sr_confirmed_short else 'не подтверждено'}")
+            recommendation = f"Нейтральная зона: FGI = {fgi}, RSI = {rsi:.2f}. Возможна продажа ({confirmation_status})"
         else:
             recommendation = f"Нейтральная зона: FGI = {fgi}, RSI = {rsi:.2f}. Воздержаться или ждать пробоя с объемом"
 
-    # Вывод базовой информации
+    # Убеждаемся, что recommendation всегда определена
+    if recommendation is None:
+        recommendation = f"Нейтральная зона: FGI = {fgi}, RSI = {rsi:.2f}. Нет четкого сигнала, ждите дополнительных данных."
+
     print("=== Анализ рынка ===")
     print(f"Актив: {symbol}, Таймфрейм: {timeframe}")
     print(f"Текущая цена: {price:.2f} USDT, Объем: {volume:.2f}")
@@ -360,30 +406,59 @@ def trading_strategy(symbol, timeframe):
     print(f"Рекомендация: {recommendation}")
 
     # Расчет вероятности и рекомендации от ИИ
-    if scenario in ["divergence_long", "divergence_short"]:
-        probability = calculate_probability(scenario, trend, trend_strength, success_rates, volume_confirmed, ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed)
-        if scenario == "divergence_long" and (volume_confirmed or ema_confirmed or macd_confirmed or bollinger_confirmed or sr_confirmed):
-            print("\n=== Рекомендации от ИИ ===")
-            print(f"Советую рассмотреть покупку (long) с учетом перекоса. Шанс успеха: {probability:.0f}%. Рекомендуется дождаться полного подтверждения всех индикаторов для снижения риска.")
-        elif scenario == "divergence_short" and (volume_confirmed or ema_confirmed or macd_confirmed or bollinger_confirmed or sr_confirmed):
-            print("\n=== Рекомендации от ИИ ===")
-            print(f"Советую рассмотреть продажу (short) с учетом перекоса. Шанс успеха: {probability:.0f}%. Рекомендуется дождаться полного подтверждения всех индикаторов для снижения риска.")
-        else:
-            print("\n=== Рекомендации от ИИ ===")
-            print(f"Сигнал слабый из-за недостатка подтверждений. Шанс успеха: {probability:.0f}%. Рекомендуется воздержаться или ждать улучшения условий.")
-    elif scenario == "long" or scenario == "short":
-        probability = calculate_probability(scenario, trend, trend_strength, success_rates, True, True, True, True, True)
-        print("\n=== Рекомендации от ИИ ===")
-        print(f"Сильный сигнал для {'покупки (long)' if scenario == 'long' else 'продажи (short)'}. Шанс успеха: {probability:.0f}%. Рекомендуется войти в позицию с учетом текущих рыночных данных.")
-    else:
-        probability = calculate_probability(scenario, trend, trend_strength, success_rates, False, False, False, price <= bb_lower or price >= bb_upper, abs(price - support) / price < 0.02 or abs(price - resistance) / price < 0.02)
-        print("\n=== Рекомендации от ИИ ===")
-        print(f"Рынок в нейтральной зоне. Шанс успеха: {probability:.0f}%. {'Рассмотрите long, если цена у поддержки или нижней полосы Bollinger.' if price <= bb_lower or abs(price - support) / price < 0.02 else ''} {'Рассмотрите short, если цена у сопротивления или верхней полосы Bollinger.' if price >= bb_upper or abs(price - resistance) / price < 0.02 else ''} В противном случае воздержитесь.")
+    print("\n=== Рекомендации от ИИ ===")
+    probability = calculate_probability(scenario, trend, trend_strength, success_rates, volume_confirmed, ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed)
+    confirmed_count = sum([volume_confirmed, ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed])
 
-    # Вывод пояснений (опционально)
+    if scenario in ["long", "divergence_long"]:
+        if confirmed_count >= 3:
+            if probability >= 50:
+                print(f"Сильный сигнал для покупки. Шанс успеха: {probability:.0f}%. Рекомендуется действовать на основе текущих данных.")
+            else:
+                print(f"Сигнал для покупки есть, но шансы успеха низкие: {probability:.0f}%. Лучше подождать более благоприятных условий.")
+        else:
+            print(f"Сигнал для покупки слабый из-за недостатка подтверждений. Шанс успеха: {probability:.0f}%. Лучше подождать улучшения условий.")
+    elif scenario in ["short", "divergence_short"]:
+        if confirmed_count >= 3:
+            if probability >= 50:
+                print(f"Сильный сигнал для продажи. Шанс успеха: {probability:.0f}%. Рекомендуется действовать на основе текущих данных.")
+            else:
+                print(f"Сигнал для продажи есть, но шансы успеха низкие: {probability:.0f}%. Лучше подождать более благоприятных условий.")
+        else:
+            print(f"Сигнал для продажи слабый из-за недостатка подтверждений. Шанс успеха: {probability:.0f}%. Лучше подождать улучшения условий.")
+    else:
+        probability_long = calculate_probability("long", trend, trend_strength, success_rates, volume_confirmed, ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed)
+        probability_short = calculate_probability("short", trend, trend_strength, success_rates, volume_confirmed, ema_confirmed_short, macd_confirmed_short, bollinger_confirmed_short, sr_confirmed_short)
+        if confirmed_count_long >= 3 and probability_long >= 50:
+            print(f"Рынок в нейтральной зоне, но есть слабый сигнал для покупки. Шанс успеха: {probability_long:.0f}%. Рассмотрите покупку, если цена у поддержки или нижней полосы Bollinger.")
+        elif confirmed_count_short >= 3 and probability_short >= 50:
+            print(f"Рынок в нейтральной зоне, но есть слабый сигнал для продажи. Шанс успеха: {probability_short:.0f}%. Рассмотрите продажу, если цена у сопротивления или верхней полосы Bollinger.")
+        else:
+            print(f"Рынок в нейтральной зоне. Шанс успеха для покупки: {probability_long:.0f}%, для продажи: {probability_short:.0f}%. Воздержитесь или ждите пробоя с объемом.")
+
+    # Добавляем подробный вывод вероятностей с разъяснениями
+    key = (scenario, trend, trend_strength)
+    base_probability = 50
+    if key in success_rates and success_rates[key]["total"] > 0:
+        base_probability = (success_rates[key]["success"] / success_rates[key]["total"]) * 100
+    total_indicators = 5
+    confirmation_bonus = (confirmed_count / total_indicators) * 30
+
+    print("\n--- Расчет вероятности успеха ---")
+    print(f"Базовая вероятность: {base_probability:.2f}%")
+    print(f"  * Рассчитана на основе исторических данных для сценария '{scenario}', тренда '{trend}' и силы тренда '{trend_strength}'.")
+    print(f"  * Из {success_rates.get(key, {'total': 0})['total']} сигналов было успешно: {success_rates.get(key, {'success': 0})['success']}.")
+    print(f"  * Формула: (успешные сигналы / общее количество сигналов) * 100 = {base_probability:.2f}%.")
+    print(f"Бонус за подтверждения: {confirmation_bonus:.2f}%")
+    print(f"  * Всего индикаторов: {total_indicators} (объем, EMA, MACD, Bollinger Bands, уровни поддержки/сопротивления).")
+    print(f"  * Подтверждено индикаторов: {confirmed_count}.")
+    print(f"  * Формула: (количество подтверждений / общее количество индикаторов) * 30 = {confirmation_bonus:.2f}%.")
+    print(f"Итоговая вероятность: {probability:.2f}%")
+    print(f"  * Формула: базовая вероятность + бонус за подтверждения = {base_probability:.2f} + {confirmation_bonus:.2f} = {probability:.2f}%.")
+
     if SHOW_EXPLANATIONS:
         print_explanations(ema_confirmed, macd_confirmed, bollinger_confirmed, sr_confirmed, scenario)
 
-# Запуск программы
+
 if __name__ == "__main__":
     trading_strategy(SYMBOL, TIMEFRAME)

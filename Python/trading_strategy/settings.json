@@ -1,5 +1,5 @@
 {
-    "symbol": "XRPUSDT",                    
+    "symbol": "BTCUSDT",                    
     "timeframe": "4h",
     "fgi_threshold_low": 25,
     "fgi_threshold_high": 75,
@@ -15,8 +15,8 @@
     "bollinger_deviation": 2,
     "support_resistance_window": 10,
     "show_explanations": true,
-    "historical_data_limit": 100,
-    "success_threshold": 0.02,
-    "success_horizon": 5,
+    "historical_data_limit": 500,
+    "success_threshold": 0.01,
+    "success_horizon": 8,
     "adx_period": 14
 }   

@@ -1,20 +1,28 @@
+import sys
 import asyncio
 import logging
 import io
-import sys
+import os
+from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command, Filter
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.client.default import DefaultBotProperties
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-# Замените токен и ADMIN_CHAT_ID на ваши реальные значения!
-API_TOKEN = "BOT_TOKEN"
-ADMIN_CHAT_ID = 123456789  # Замените на ваш Telegram chat_id для уведомлений
+# Если бот запускается на Windows, переключаемся на SelectorEventLoop
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+# Загружаем переменные окружения из файла .env
+load_dotenv()
+
+API_TOKEN = os.getenv("API_TOKEN")
+ADMIN_CHAT_ID = 123456789  # Замените на ваш реальный Telegram chat_id для уведомлений
 
 logging.basicConfig(level=logging.INFO)
 
-# Создаем бота и диспетчера с глобальными настройками (HTML-разметка)
+# Создаем бота с HTML-разметкой
 bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
 
@@ -74,14 +82,14 @@ async def force_run_script(message: types.Message):
         old_stdout = sys.stdout
         sys.stdout = buffer
         try:
-            # Запускаем синхронную функцию в отдельном потоке, чтобы не блокировать бота
+            # Запускаем торговую стратегию в отдельном потоке
             await asyncio.to_thread(trading_strategy, trading_pair, TIMEFRAME)
         finally:
             sys.stdout = old_stdout
         output = buffer.getvalue()
         if not output:
             output = "Скрипт выполнен, но не было вывода."
-        # Разбиваем вывод на части по 4096 символов (ограничение Telegram)
+        # Отправляем вывод частями (ограничение Telegram – 4096 символов)
         for chunk in [output[i:i+4096] for i in range(0, len(output), 4096)]:
             await message.answer(chunk)
     except Exception as e:
@@ -97,23 +105,21 @@ async def scheduled_run():
         old_stdout = sys.stdout
         sys.stdout = buffer
         try:
-            # Запускаем торговую стратегию в отдельном потоке
             await asyncio.to_thread(trading_strategy, trading_pair, TIMEFRAME)
         finally:
             sys.stdout = old_stdout
         output = buffer.getvalue()
         if not output:
             output = "Скрипт выполнен, но не было вывода."
-        # Отправляем вывод в чат администратора
         for chunk in [output[i:i+4096] for i in range(0, len(output), 4096)]:
             await bot.send_message(ADMIN_CHAT_ID, chunk, parse_mode="HTML")
     except Exception as e:
         await bot.send_message(ADMIN_CHAT_ID, f"Ошибка при автоматическом запуске скрипта: {e}")
 
 async def main():
-    # Инициализируем планировщик задач с часовым поясом UTC
+    # Инициализируем планировщик задач (timezone UTC)
     scheduler = AsyncIOScheduler(timezone="UTC")
-    # Планируем задачу по расписанию: 23:50, 03:50, 07:50, 11:50, 15:50, 19:50 UTC
+    # Планируем задачу: 23:50, 03:50, 07:50, 11:50, 15:50, 19:50 UTC
     scheduler.add_job(scheduled_run, 'cron', hour='23,3,7,11,15,19', minute=50)
     scheduler.start()
     await dp.start_polling(bot)

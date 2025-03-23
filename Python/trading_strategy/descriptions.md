@@ -205,3 +205,40 @@ Bollinger Bands: Upper=89359.45, Middle=84036.06, Lower=78712.68
 1. Установите зависимости:  `pip install .\requirements.txt`
 2. Создайте файл `settings.json` с нужными параметрами.
 3. Запустите скрипт: `python trading_strategy.py`
+
+
+# Troubleshooting
+
+**ERROR: Failed to build installable wheels for some pyproject.toml based projects (ta-lib)**  
+
+Ошибка "fatal error: Killed signal terminated program cc1" часто свидетельствует о том, что процесс компиляции был принудительно завершён системой, например, из-за недостатка оперативной памяти. На сервере с 1 GB памяти это не редкость, особенно при сборке таких библиотек, как ta‑lib.
+
+Чтобы решить эту проблему, можно попробовать следующие шаги:
+
+_Увеличить swap‑память:_  
+Создание swap‑файла позволит системе использовать дополнительное виртуальное пространство, что может помочь завершить сборку. Например, создайте swap‑файл объемом 2 GB:
+
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
+Чтобы убедиться, что swap активен, выполните:
+
+```bash
+free -h
+```
+
+После этого повторите установку:
+```bash
+pip install ta-lib
+```
+
+Перед установкой Python‑библиотеки ta‑lib убедитесь, что на системе установлены необходимые библиотеки и заголовочные файлы:
+```bash
+sudo apt-get update
+sudo apt-get install libta-lib0 libta-lib0-dev
+```
+
+ta-lib - [https://pypi.org/project/ta-lib/](https://pypi.org/project/ta-lib/)

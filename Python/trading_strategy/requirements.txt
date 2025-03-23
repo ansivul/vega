@@ -4,3 +4,4 @@ ta-lib
 requests
 apscheduler
 aiogram
+python-dotenv

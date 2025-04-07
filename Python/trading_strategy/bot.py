@@ -82,6 +82,10 @@ async def force_run_script(message: types.Message):
         old_stdout = sys.stdout
         sys.stdout = buffer
         try:
+            # Запускаем синхронную функцию в отдельном потоке, чтобы не блокировать бота
+            # Python 3.8
+            # loop = asyncio.get_running_loop()
+            # await loop.run_in_executor(None, trading_strategy, trading_pair, TIMEFRAME)
             # Запускаем торговую стратегию в отдельном потоке
             await asyncio.to_thread(trading_strategy, trading_pair, TIMEFRAME)
         finally:
@@ -105,6 +109,11 @@ async def scheduled_run():
         old_stdout = sys.stdout
         sys.stdout = buffer
         try:
+            # Запускаем синхронную функцию в отдельном потоке, чтобы не блокировать бота
+            # Python 3.8
+            # loop = asyncio.get_running_loop()
+            # await loop.run_in_executor(None, trading_strategy, trading_pair, TIMEFRAME)
+            # Запускаем торговую стратегию в отдельном потоке
             await asyncio.to_thread(trading_strategy, trading_pair, TIMEFRAME)
         finally:
             sys.stdout = old_stdout

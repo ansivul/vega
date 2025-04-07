@@ -242,3 +242,4 @@ sudo apt-get install libta-lib0 libta-lib0-dev
 ```
 
 ta-lib - [https://pypi.org/project/ta-lib/](https://pypi.org/project/ta-lib/)
+vim /etc/systemd/system/bot_ts.service

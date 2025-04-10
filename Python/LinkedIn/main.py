@@ -88,13 +88,21 @@ with tab2:
                 st.markdown(f"[Читать статью]({article['link']})")
 
                 posts = generate_post_variants(article['title'], article['summary'], use_mock=use_mock)
+                styles = [
+                    "📌 Фактологический",
+                    "📊 Аналитический",
+                    "📖 История / вовлекающий",
+                    "🧠 Мнение / экспертный",
+                    "💬 Провокационный вопрос",
+                    "🪄 Коротко и цепко"
+                ]
+
                 for i, post in enumerate(posts):
-                    st.text_area(
-                        label=f"Пост {i+1} для статьи {idx+1}",
-                        value=post,
-                        height=100,
-                        key=f"gen_post_{idx}_{i}"
-                    )
+                    style = styles[i] if i < len(styles) else f"💡 Вариант {i+1}"
+                    st.markdown(f"### {style} пост", unsafe_allow_html=True)
+                    st.markdown(post.strip(), unsafe_allow_html=True)
+                    st.markdown("---")
+
 
                 image_prompt = generate_image_prompt(article['summary'], use_mock=use_mock)
                 st.text_input(

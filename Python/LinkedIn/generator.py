@@ -9,23 +9,33 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 def generate_post_variants(title, summary, use_mock=True):
     if use_mock:
         return [
-            f"[Факт] {title}: ключевые выводы статьи.",
-            f"[Аналитика] Почему это важно: {summary[:100]}...",
-            f"[История] Недавно обсуждали похожее — вот краткий взгляд."
+            f"[Fact] {title}: Key takeaways from the article.",
+            f"[Analysis] Why it matters: {summary[:100]}...",
+            f"[Story] Recently we discussed a similar topic — here's a quick overview.",
+            f"[Expert] Here's my professional take on the topic: {title}",
+            f"[Question] What do you think about this? Could it impact your work?",
+            f"[Catchy] You won’t believe how this changes everything — {title}"
         ]
 
     prompt = f"""
-    На основе следующей статьи:
-    Заголовок: {title}
-    Содержание: {summary}
+    You are a professional LinkedIn content creator.
 
-    Сгенерируй 3 варианта постов для LinkedIn по шаблону:
-    1. Фактологичный
-    2. Аналитический
-    3. История / вовлекающий стиль
+    Based on the following article:
+    Title: {title}
+    Summary: {summary}
 
-    Каждый вариант не более 500 символов.
+    Generate 6 different LinkedIn posts **in English**, each with a distinct tone:
+    1. Fact-based
+    2. Analytical
+    3. Storytelling / Engaging
+    4. Expert opinion
+    5. Provocative question
+    6. Short and catchy
+
+    Each post should be no longer than 500 characters and written in a professional but approachable tone.
+    Do not include any titles or numbering in the output, just the posts themselves separated by blank lines.
     """
+
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
@@ -33,6 +43,7 @@ def generate_post_variants(title, summary, use_mock=True):
     )
     content = response.choices[0].message.content.strip()
     return [variant.strip() for variant in content.split("\n\n") if variant.strip()]
+
 
 def generate_image_prompt(summary, use_mock=False):
     if use_mock:
